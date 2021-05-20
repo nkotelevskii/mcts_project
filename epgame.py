@@ -39,7 +39,7 @@ class EPGame(gym.Env):
         self.x_e = self.transition(self.x_e,action)
         self.state = np.r_[self.x_e,self.x_p]
         reward = self.compute_reward()
-        done = (self.x_e == self.x_p)
+        done = (tuple(self.x_e )== tuple(self.x_p))
         self.evaders_turn = False
         self.pursuers_turn = True
         return self.state, reward, done,{}
@@ -51,7 +51,7 @@ class EPGame(gym.Env):
         self.x_p = self.transition(self.x_p,action)
         self.state = np.r_[self.x_e,self.x_p]
         reward = self.compute_reward()
-        done = (self.x_e == self.x_p)
+        done = (tuple(self.x_e )== tuple(self.x_p))
         self.evaders_turn = True
         self.pursuers_turn = False
         return self.state, reward, done,{}
