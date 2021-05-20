@@ -39,7 +39,7 @@ class EPGame(gym.Env):
         self.x_e = self.transition(self.x_e,action)
         self.state = np.r_[self.x_e,self.x_p]
         reward = self.compute_reward()
-        done = (tuple(self.x_e )== tuple(self.x_p))
+        done = (tuple(self.x_e) == tuple(self.x_p))
         self.evaders_turn = False
         self.pursuers_turn = True
         return self.state, reward, done,{}
@@ -51,7 +51,7 @@ class EPGame(gym.Env):
         self.x_p = self.transition(self.x_p,action)
         self.state = np.r_[self.x_e,self.x_p]
         reward = self.compute_reward()
-        done = (tuple(self.x_e )== tuple(self.x_p))
+        done = (tuple(self.x_e) == tuple(self.x_p))
         self.evaders_turn = True
         self.pursuers_turn = False
         return self.state, reward, done,{}
@@ -90,8 +90,12 @@ class EPGame(gym.Env):
         
         
     def compute_reward(self):
-        r = 1 if tuple(self.x_e) != tuple(self.x_p) else 0
-        return r
+        return self.reward(self.x_e,self.x_p)
+    
+    @staticmethod
+    def reward(x_e,x_p):
+        return 1 if tuple(x_e) != tuple(x_p) else 0
+        
         
     def reset(self):
         
@@ -132,7 +136,6 @@ class EPGame(gym.Env):
             self.viewer = rendering.Viewer(screen_width, screen_height)
             walls = np.argwhere(map_with_bounds >0)*scale
             
-
             evader = rendering.make_circle(agent_size/2)
             evader.set_color(0, 0, 255)
             self.evadertrans = rendering.Transform()
