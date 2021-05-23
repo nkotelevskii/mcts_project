@@ -46,7 +46,10 @@ def save_results(evader_policy,pursuer_policy,max_iters = 100,name = "policy_exa
 
 
 def default_reward(x_e,x_p,goal):
-    return -np.linalg.norm(x_e-x_p)+np.linalg.norm(x_e-goal)
+    r = -np.linalg.norm(x_e-goal) + np.linalg.norm(x_e-x_p) 
+    if tuple(x_e) == tuple(goal):
+        r += 100
+    return r
     
     
 class EPGame(gym.Env):
@@ -85,7 +88,7 @@ class EPGame(gym.Env):
         self.x_e = self.transition(self.x_e,action)
         self.state = tuple(np.r_[self.x_e,self.x_p])
         reward = self.compute_reward()
-        done = (tuple(self.x_e) == tuple(self.x_p))
+        done = (tuple(self.x_e) == tuple(self.x_p)) or (tuple(self.x_e) == tuple(self.goal))
         self.evaders_turn = False
         self.pursuers_turn = True
         return self.state, reward, done,{}
@@ -97,7 +100,7 @@ class EPGame(gym.Env):
         self.x_p = self.transition(self.x_p,action)
         self.state = tuple(np.r_[self.x_e,self.x_p])
         reward = self.compute_reward()
-        done = (tuple(self.x_e) == tuple(self.x_p))
+        done = (tuple(self.x_e) == tuple(self.x_p)) or (tuple(self.x_e) == tuple(self.goal))
         self.evaders_turn = True
         self.pursuers_turn = False
         return self.state, reward, done,{}
@@ -131,6 +134,9 @@ class EPGame(gym.Env):
             return False
         if tuple(self.x_e) == tuple(self.x_p):
             #print('Сaught')
+            return False
+        if tuple(self.x_e) == tuple(self.goal):
+            #print('Goal')
             return False
         return True
         
