@@ -2,7 +2,7 @@ import numpy as np
 
 
 def make_str_state(x_e, x_p):
-    return str(x_e) + " " + str(x_p)
+    return str(np.array(x_e)) + " " + str(np.array(x_p))
 
 
 def plot_joint_enviroment(env, x_e, x_p):

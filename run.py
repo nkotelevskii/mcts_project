@@ -1,44 +1,66 @@
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm.auto import tqdm
 
-from mcts import EPGame, mcts_two_player_step, plot_joint_enviroment
+from mcts import EPGame, simtree, plot_joint_enviroment, State, Tree, get_state_reward, save_results, make_str_state
 
-data = np.load('data_ps3.npz')
-environment = data['environment']
 
-env = EPGame(env_map=environment)
-env.reset()
+def UctSearch(environment, UCT=False):
+    env = EPGame(env_map=environment)
+    env.reset()
+    x_e = env.x_e
+    x_p = env.x_p
+    state_reward = get_state_reward(name='dist')
 
-im = plot_joint_enviroment(environment, tuple(env.x_e), tuple(env.x_p))
-plt.matshow(im)
-plt.show()
-
-fig = plt.figure()
-imgs = []
-for s in tqdm(range(1000)):
     im = plot_joint_enviroment(environment, tuple(env.x_e), tuple(env.x_p))
-    plot = plt.imshow(im)
-    imgs.append([plot])
-    u_e = mcts_two_player_step(env=env, n_iterations=50, T_max=10, use_uct=False,
-                               is_pursuer=False)
-    u_p = mcts_two_player_step(env=env, n_iterations=5, T_max=5, use_uct=False,
-                               is_pursuer=True)
-    _, _, done, _ = env.evader_step(u_e)
-    if done:
-        print('game over((')
-        break
-    state, _, done, _ = env.pursuer_step(u_p)
-    if done:
-        print('game over((')
-        break
+    plt.matshow(im)
+    plt.show()
 
-im = plot_joint_enviroment(environment, tuple(env.x_e), tuple(env.x_p))
-plot = plt.imshow(im)
-imgs.append([plot])
-ani = animation.ArtistAnimation(fig, imgs, interval=100, blit=True)
+    # Define tree, which at the beginning consists of the current state
+    tree = Tree(states=[State(my_id=0, parent_id=-2, e_state=x_e, p_state=x_p,
+                              state_reward=state_reward(x_e=x_e, x_p=x_p))],
+                use_uct=UCT)  # our tree
+    for _ in tqdm(range(10000)):
+        env.reset()
+        simtree(env=env, tree=tree, T_max=100)
+    return env, tree
 
-ani.save('scape_solve.mp4', writer="imagemagick")
 
-plt.show()
+def policy_action(tree, state, is_pursuer):
+    sorted_states = sorted([tree.states[i] for i in state.children_ids], key=lambda x: x.value)
+    if is_pursuer:
+        u = sorted_states[0].action_applied_p
+    else:
+        u = sorted_states[-1].action_applied_e
+    return u
+
+
+def policy(obs, tree, is_pursuer):
+    node_id = tree.visited_states.get(make_str_state(obs[:2], obs[2:]), None)
+    if node_id:
+        sorted_states = sorted(
+            [tree.states[i] for i in tree.states[node_id].children_ids],
+            key=lambda x: x.value)
+        if len(sorted_states):
+            if is_pursuer:
+                return sorted_states[0].action_applied_p
+            else:
+                return sorted_states[-1].action_applied_e
+    return 0
+
+
+def make_policy(tree, is_pursuer):
+    if is_pursuer:
+        return lambda obs: policy(obs, tree=tree, is_pursuer=True)
+    else:
+        return lambda obs: policy(obs, tree=tree, is_pursuer=False)
+
+
+if __name__ == '__main__':
+    data = np.load('data_ps3.npz')
+    environment = data['environment']
+    env, tree = UctSearch(environment=environment, UCT=False)
+    evader_policy = make_policy(tree=tree, is_pursuer=False)
+    pursuer_policy = make_policy(tree=tree, is_pursuer=True)
+    save_results(env=env, evader_policy=evader_policy, pursuer_policy=pursuer_policy, max_iters=100)
+    print('Success!')
