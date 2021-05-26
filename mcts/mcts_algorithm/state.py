@@ -3,8 +3,7 @@ class State:
     Class, which represents the state. State is the combination of pursuer and evader positions.
     """
 
-    def __init__(self, my_id, parent_id, e_state, p_state, state_reward, action_applied_e=None, action_applied_p=None,
-                 add_to_queue=False):
+    def __init__(self, my_id, parent_id, e_state, p_state, state_reward, action_applied_e=None, action_applied_p=None):
         """
         my_id -- id of the node
         parent_id -- id of its parent
@@ -24,7 +23,6 @@ class State:
         self.action_applied_e = action_applied_e
         self.action_applied_p = action_applied_p
         self.state_reward = state_reward
-        self.add_to_queue = add_to_queue
 
     @property
     def value(self, ):

@@ -8,19 +8,25 @@ reward = get_reward(name='dist_reward')
 
 
 def selectstate(tree):
-    best_node = tree.queue.pop(0)
-    best_node.add_to_queue = False
-    x_e_best = best_node.e_state
-    x_p_best = best_node.p_state
-    return best_node, x_e_best, x_p_best
+    state = tree.states[0]
+    position = -1
+    while len(state.children_ids):
+        state = sorted([tree.states[i] for i in state.children_ids], key=lambda x: x.value)[position]
+        if position == -1:
+            position = 0
+        else:
+            position = -1
+    x_e_best = state.e_state
+    x_p_best = state.p_state
+    return state, x_e_best, x_p_best
 
 
-def run_simulation(tree, env, previous_node, x_e, x_p, a_e, a_p, T_max, add_to_queue):
+def run_simulation(tree, env, previous_node, x_e, x_p, a_e, a_p, T_max):
     # And we add the node to the tree
     a = np.array(env.actions)
     tree.add_node(parent_id=previous_node.id, e_state=x_e, p_state=x_p,
                   action_applied_e=a_e, action_applied_p=a_p,
-                  state_reward=state_reward(x_e=x_e, x_p=x_p), add_to_queue=add_to_queue)
+                  state_reward=state_reward(x_e=x_e, x_p=x_p))
     tree.visited_states[make_str_state(x_e=x_e, x_p=x_p)] = tree.states[-1].id
 
     # To compute reward, we have to take distance of previous steps between evader and pursuer into account
@@ -69,13 +75,13 @@ def simtree(env, tree, T_max=50):
         if make_str_state(x_e=new_x_e, x_p=x_p_best) not in tree.visited_states.keys():
             run_simulation(tree=tree, env=env, previous_node=best_node, x_e=new_x_e, x_p=x_p_best, a_e=a_e,
                            a_p=None,
-                           T_max=T_max, add_to_queue=False)
+                           T_max=T_max)
         else:
             continue
-        last_evader = tree.states[-1]
+        last_evader_pos = tree.states[-1]
         for a_p, action_p in enumerate(a):  # iterate over all actions of pursuer
 
             new_x_p = env.transition(x=x_p_best, u=action_p)
             if make_str_state(x_e=new_x_e, x_p=new_x_p) not in tree.visited_states.keys():
-                run_simulation(tree=tree, env=env, previous_node=last_evader, x_e=new_x_e, x_p=new_x_p, a_e=None,
-                               a_p=a_p, T_max=T_max, add_to_queue=True)
+                run_simulation(tree=tree, env=env, previous_node=last_evader_pos, x_e=new_x_e, x_p=new_x_p, a_e=None,
+                               a_p=a_p, T_max=T_max)

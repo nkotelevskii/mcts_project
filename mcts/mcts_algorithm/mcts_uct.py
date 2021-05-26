@@ -50,14 +50,14 @@ class MyTree:
                         action_applied=action_applied, sum_inv_distance=sum_inv_distance)
         self.nodes[parent_id].children_ids.append(len(self.nodes))
         self.nodes.append(new_node)
-        heapq.heappush(self.queue, self.nodes[-1])
+        # heapq.heappush(self.queue, self.nodes[-1])
 
     def update_tree(self, node_id, outcome):
         while node_id != -2:
             self.nodes[node_id].update_value(outcome=outcome)
             node_id = self.nodes[node_id].parent_id
-        self.queue = [self.nodes[i] for i in range(len(self.nodes))]
-        heapq.heapify(self.queue)
+        # self.queue = [self.nodes[i] for i in range(len(self.nodes))]
+        # heapq.heapify(self.queue)
 
     def return_best(self):
         # return self.queue[-1]

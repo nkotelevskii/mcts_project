@@ -3,7 +3,7 @@ import numpy as np
 
 def get_state_reward(name='dist'):
     if name == 'dist':
-        return lambda x_e, x_p: np.linalg.norm(x_e - x_p)  # if np.all(x_e != x_p) else float("inf")
+        return lambda x_e, x_p: np.linalg.norm(x_e - x_p) / 1000  # if np.all(x_e != x_p) else float("inf")
     else:
         raise ValueError('No such state reward name')
 

@@ -18,11 +18,11 @@ def UctSearch(environment, UCT=False):
 
     # Define tree, which at the beginning consists of the current state
     tree = Tree(states=[State(my_id=0, parent_id=-2, e_state=x_e, p_state=x_p,
-                              state_reward=state_reward(x_e=x_e, x_p=x_p))],
+                              state_reward=state_reward(x_e=x_e, x_p=x_p), action_applied_p=-1)],
                 use_uct=UCT)  # our tree
-    for _ in tqdm(range(1000)):
+    for _ in tqdm(range(10000)):
         env.reset()
-        simtree(env=env, tree=tree, T_max=50)
+        simtree(env=env, tree=tree, T_max=10)
     return env, tree
 
 
@@ -37,21 +37,20 @@ def policy_action(tree, state, is_pursuer):
 
 def policy(obs, tree, is_pursuer):
     node_id = tree.visited_states.get(make_str_state(obs[:2], obs[2:]), None)
-    if node_id is not None:
+    previous_pursuer = lambda Nid: tree.states[Nid].action_applied_p is not None
+    if node_id is not None and previous_pursuer(node_id) != is_pursuer:
         sorted_states = sorted(
             [tree.states[i] for i in tree.states[node_id].children_ids],
             key=lambda x: x.value)
         if len(sorted_states):
-            best_evader = sorted_states[-1]
             if is_pursuer:
-                sorted_states = sorted(
-                    [tree.states[i] for i in tree.states[best_evader.id].children_ids],
-                    key=lambda x: x.value)
-                if len(sorted_states):
-                    return sorted_states[0].action_applied_p
+                print('not random')
+                return sorted_states[0].action_applied_p
             else:
-                return best_evader.action_applied_e
-    return 0
+                print('not random')
+                return sorted_states[-1].action_applied_e
+    print('random')
+    return np.random.randint(low=0, high=4)
 
 
 def make_policy(tree, is_pursuer):
