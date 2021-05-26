@@ -2,23 +2,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm.auto import tqdm
 
-from mcts import EPGame, simtree, plot_joint_enviroment, State, Tree, get_state_reward, save_results, make_str_state
+from mcts import EPGame, simtree, plot_joint_enviroment, State, Tree, save_results, make_str_state, \
+    nogoal_reward
 
 
 def UctSearch(environment, UCT=False):
-    env = EPGame(env_map=environment)
-    env.reset()
-    x_e = env.x_e
-    x_p = env.x_p
-    state_reward = get_state_reward(name='dist')
+    env = EPGame(env_map=environment, reward=nogoal_reward)
+    state = env.reset()
+    x_e = state[:2]
+    x_p = state[2:]
 
-    im = plot_joint_enviroment(environment, tuple(env.x_e), tuple(env.x_p))
+    im = plot_joint_enviroment(environment, tuple(x_e), tuple(x_p))
     plt.matshow(im)
     plt.show()
 
     # Define tree, which at the beginning consists of the current state
-    tree = Tree(states=[State(my_id=0, parent_id=-2, e_state=x_e, p_state=x_p,
-                              state_reward=state_reward(x_e=x_e, x_p=x_p), action_applied_p=-1)],
+    tree = Tree(states=[State(my_id=0, parent_id=-2, e_state=x_e, p_state=x_p, action_applied_p=-1)],
                 use_uct=UCT)  # our tree
     for _ in tqdm(range(10000)):
         env.reset()

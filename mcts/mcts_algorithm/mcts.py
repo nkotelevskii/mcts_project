@@ -18,17 +18,18 @@ class Tree:
         self.n_visits = 0
         self.visited_states = {}
 
-    def add_node(self, parent_id, e_state, p_state, action_applied_e, action_applied_p, state_reward):
+    def add_node(self, parent_id, e_state, p_state, action_applied_e, action_applied_p):
         new_node = State(my_id=len(self.states), parent_id=parent_id, e_state=e_state, p_state=p_state,
                          action_applied_e=action_applied_e,
-                         action_applied_p=action_applied_p,
-                         state_reward=state_reward
+                         action_applied_p=action_applied_p
                          )
         self.states[parent_id].children_ids.append(len(self.states))
         self.states.append(new_node)
         self.n_visits += 1
 
-    def update_tree(self, node_id, outcome):
+    def update_tree(self, env, node_id, outcome):
+        cum_reward = outcome
         while node_id != -2:
-            self.states[node_id].update_value(outcome=outcome)
+            self.states[node_id].update_value(outcome=cum_reward)
             node_id = self.states[node_id].parent_id
+            cum_reward += env.reward(self.states[node_id].e_state, self.states[node_id].p_state)

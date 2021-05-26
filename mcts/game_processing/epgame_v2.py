@@ -57,9 +57,9 @@ class EPGame(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, env_map, reward=None, seed_num=781):
+    def __init__(self, env_map, reward=None, use_goal=False, seed_num=781):
         self.done = False
-
+        self.use_goal = use_goal
         self.seed_num = seed_num
         self.reward = reward if reward != None else default_reward
 
@@ -147,10 +147,11 @@ class EPGame(gym.Env):
         self.evaders_turn = True
         self.pursuers_turn = True
 
-        x1_max, x2_max = self.env_map.shape
         free_space = np.argwhere(self.env_map == 0)
         x_e_index, x_p_index, goal_index = self.np_random.choice(np.arange(0, len(free_space)), 3, replace=False)
         self.x_e, self.x_p, self.goal = free_space[x_e_index], free_space[x_p_index], free_space[goal_index]
+        if not self.use_goal:
+            self.goal = (None, None)
 
         self.state = tuple(np.r_[self.x_e, self.x_p])
 
@@ -200,10 +201,11 @@ class EPGame(gym.Env):
 
         x_e = (self.x_e + 1) * scale
         x_p = (self.x_p + 1) * scale
-        goal = (self.goal + 1) * scale
+        if self.use_goal:
+            goal = (self.goal + 1) * scale
+            self.goaltrans.set_translation(*goal)
 
         self.evadertrans.set_translation(*x_e)
         self.pursuertrans.set_translation(*x_p)
-        self.goaltrans.set_translation(*goal)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
