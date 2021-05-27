@@ -27,10 +27,7 @@ class Tree:
 
     def update_tree(self, env, node_id, outcome):
         cum_reward = outcome
-        t = 0
         while node_id != -2:
-            cum_reward += env.reward(self.states[node_id].e_state, self.states[node_id].p_state)
+            cum_reward += env.reward(self.states[node_id].e_state, self.states[node_id].p_state, env.goal)
             self.states[node_id].update_value(outcome=cum_reward)
             node_id = self.states[node_id].parent_id
-            t += 1
-        print("Tree depth: ", t)

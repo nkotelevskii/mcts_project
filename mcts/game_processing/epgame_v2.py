@@ -1,3 +1,5 @@
+# from epgame_v2 import EPGame,save_results
+
 import gym
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
@@ -12,7 +14,7 @@ def compute_rgb_array(env, evader_policy, pursuer_policy, max_iters):
     done = False
     obs = env.reset()
     i = 0
-    while (not done) and i < max_iters:
+    while (not done) and i < max_iters // 2:
         evader_action_index = evader_policy(obs)  # in [0,1,2,3]
         obs, reward, done, info = env.evader_step(evader_action_index)
         pursuer_action_index = pursuer_policy(obs)  # in [0,1,2,3]
@@ -45,7 +47,13 @@ def save_results(env, evader_policy, pursuer_policy, max_iters=100, name="policy
 
 
 def default_reward(x_e, x_p, goal):
-    r = -np.linalg.norm(x_e - goal) + np.linalg.norm(x_e - x_p)
+    x_e = np.array(x_e)
+    x_p = np.array(x_p)
+    goal = np.array(goal)
+    if tuple(goal) != (None, None):
+        r = -np.linalg.norm(x_e - goal) + np.linalg.norm(x_e - x_p)
+    else:
+        r = -np.linalg.norm(x_e - goal)
     if tuple(x_e) == tuple(goal):
         r += 100
     return r
@@ -60,18 +68,19 @@ class EPGame(gym.Env):
     def __init__(self, env_map, reward=None, use_goal=False, seed_num=781):
         self.done = False
         self.use_goal = use_goal
+
         self.seed_num = seed_num
         self.reward = reward if reward != None else default_reward
 
         self.env_map = np.array(env_map)
-        self.actions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
+        self._total_actions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
         x_max, y_max = self.env_map.shape
 
-        self.evader_action_space = spaces.MultiDiscrete(self.env_map.shape)
+        self.evader_action_space = spaces.MultiDiscrete(len(self._total_actions))
         self.evader_observation_space = spaces.MultiDiscrete([x_max, y_max, x_max, y_max])
 
-        self.pursuer_action_space = spaces.MultiDiscrete(self.env_map.shape)
+        self.pursuer_action_space = spaces.MultiDiscrete(len(self._total_actions))
         self.pursuer_observation_space = spaces.MultiDiscrete([x_max, y_max, x_max, y_max])
 
         self.seed()
@@ -79,29 +88,63 @@ class EPGame(gym.Env):
         self.viewer = None
         self.reset()
 
-    def evader_step(self, action_index):
+    def update_allowed_actions(self, evador_actions):
+        self.allowed_actions = []
+        if evador_actions:
+            for a_index, a in enumerate(self._total_actions):
+                x_e = tuple(self.transition(self.x_e, a))
+                x_p = tuple(self.x_p)
+                joint_state = x_e + x_p + (1,)  # 1 = pursuer state
+                if self.visited_states[joint_state] == False:
+                    self.allowed_actions.append(a_index)
+        else:
+            for a_index, a in enumerate(self._total_actions):
+                x_p = tuple(self.transition(self.x_p, a))
+                x_e = tuple(self.x_e)
+                joint_state = x_e + x_p + (0,)  # 1 = evador state
+                if self.visited_states[joint_state] == False:
+                    self.allowed_actions.append(a_index)
 
+    def evader_step(self, action_index):
+        assert action_index in self.allowed_actions, "Action is not allowed"
         assert self.evaders_turn == True, "It is the pursuer turn to make step"
-        action = self.actions[action_index]
+        action = self._total_actions[action_index]
         self.x_e = self.transition(self.x_e, action)
         self.state = tuple(np.r_[self.x_e, self.x_p])
+        self.visited_states[self.state + (1,)] = True  # 1 = pursuer state
         reward = self.compute_reward()
         done = (tuple(self.x_e) == tuple(self.x_p)) or (tuple(self.x_e) == tuple(self.goal))
         self.evaders_turn = False
         self.pursuers_turn = True
-        return self.state, reward, done, {}
+        self.update_allowed_actions(evador_actions=False)
+        self.t += 1
+
+        info = None
+        if done:
+            info = "Evader wins" if tuple(self.x_e) == tuple(self.goal) else "Pursuer wins"
+
+        return self.state, reward, done, info
 
     def pursuer_step(self, action_index):
 
+        assert action_index in self.allowed_actions, "Action is not allowed"
+
         assert self.pursuers_turn == True, "It is the evader turn to make step"
-        action = self.actions[action_index]
+        action = self._total_actions[action_index]
         self.x_p = self.transition(self.x_p, action)
         self.state = tuple(np.r_[self.x_e, self.x_p])
+        self.visited_states[self.state + (0,)] = True  # 0 = evader state
         reward = self.compute_reward()
         done = (tuple(self.x_e) == tuple(self.x_p)) or (tuple(self.x_e) == tuple(self.goal))
         self.evaders_turn = True
         self.pursuers_turn = False
-        return self.state, reward, done, {}
+        self.update_allowed_actions(evador_actions=True)
+        self.t += 1
+
+        info = None
+        if done:
+            info = "Evader wins" if tuple(self.x_e) == tuple(self.goal) else "Pursuer wins"
+        return self.state, reward, done, info
 
     def transition(self, x, u):
         """Transition function for states in this problem
@@ -145,8 +188,10 @@ class EPGame(gym.Env):
         self.seed(self.seed_num)
 
         self.evaders_turn = True
-        self.pursuers_turn = True
-
+        self.pursuers_turn = False
+        self.visited_states = np.full(np.r_[self.env_map.shape, self.env_map.shape, 2], False)
+        self.t = 0
+        x1_max, x2_max = self.env_map.shape
         free_space = np.argwhere(self.env_map == 0)
         x_e_index, x_p_index, goal_index = self.np_random.choice(np.arange(0, len(free_space)), 3, replace=False)
         self.x_e, self.x_p, self.goal = free_space[x_e_index], free_space[x_p_index], free_space[goal_index]
@@ -154,7 +199,8 @@ class EPGame(gym.Env):
             self.goal = (None, None)
 
         self.state = tuple(np.r_[self.x_e, self.x_p])
-
+        self.visited_states[self.state + (0,)] = True  # 0 = evader state
+        self.update_allowed_actions(evador_actions=True)
         return self.state
 
     def seed(self, seed=None):
