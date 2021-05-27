@@ -41,7 +41,7 @@ class State:
         return self.value < other.value
 
     def update_value(self, outcome):
-        self.n_visits += 1
+        self.n_visits += 1.
         self.sum_reward += outcome
 
     def add_children(self, child_id):

@@ -1,8 +1,8 @@
 import numpy as np
 
 
-def make_str_state(x_e, x_p):
-    return str(np.array(x_e)) + " " + str(np.array(x_p))
+def make_str_state(x_e, x_p, evaders_turn):
+    return str(np.array(x_e)) + " " + str(np.array(x_p)) + " " + str(evaders_turn)
 
 
 def plot_joint_enviroment(env, x_e, x_p):
