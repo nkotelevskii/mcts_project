@@ -15,7 +15,7 @@ def UCT(state, position, tree, c=1):
     n_s = parent_state.n_visits
     if tree.use_uct:
         if n_sa != 0:
-            uct = q_sa + sign * np.sqrt(np.log(n_s) / n_sa)
+            uct = q_sa + sign * c * np.sqrt(np.log(n_s) / n_sa)
         else:
             uct = sign * np.inf
     else:
@@ -23,11 +23,11 @@ def UCT(state, position, tree, c=1):
     return uct
 
 
-def tree_policy(env, tree):
+def tree_policy(env, tree, c=1):
     state = tree.states[0]
     position = -1
     while len(state.children_ids) != 0:
-        state_upd = sorted([tree.states[i] for i in state.children_ids], key=lambda state: UCT(state, position, tree))[
+        state_upd = sorted([tree.states[i] for i in state.children_ids], key=lambda state: UCT(state, position, tree, c))[
             position]
         if position == -1:
             if state_upd.value < state.value and len(env.allowed_actions) != len(
@@ -83,7 +83,7 @@ def distance(a, b):
     return np.linalg.norm(np.array(a) - np.array(b))
 
 
-def simtree(env, tree, T_max=50):
+def simtree(env, tree, T_max=50, c=1):
     """
     Monte-Carlo tree search
     env is the environment
@@ -92,7 +92,7 @@ def simtree(env, tree, T_max=50):
 
     # First, we select the new candidate:
     # Search
-    best_node, x_e_best, x_p_best = tree_policy(env, tree)
+    best_node, x_e_best, x_p_best = tree_policy(env, tree, c=c)
     # Second, we perform an action.
     if len(env.allowed_actions) > 0:
         action_e, action_p = None, None
