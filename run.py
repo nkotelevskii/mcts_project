@@ -22,7 +22,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--save_name', type=str, default='tree.pkl', help='Name to save model with')
 parser.add_argument('--use_UCT', type=str2bool, default=True, help='Whether to use UCT')
 parser.add_argument('--T_max', type=int, default=100, help='T_max: length of MC path')
-parser.add_argument('--num_epochs', type=int, default=100000, help='num_epochs: number of epochs')
+parser.add_argument('--seed', type=int, default=200, help='seed')
+parser.add_argument('--num_epochs', type=int, default=10000, help='num_epochs: number of epochs')
 args = parser.parse_args()
 
 
@@ -54,7 +55,8 @@ if __name__ == '__main__':
 
     data = np.load('data_ps3.npz')
     environment = data['environment']
-    env = EPGame(env_map=environment, use_goal=True)
+    env = EPGame(env_map=environment, use_goal=True, seed_num = args.seed)
     tree = UctSearch(env=env, T_max=T_max, num_epochs=num_epochs, UCT=args.use_UCT)
     with open(args.save_name, "wb") as f:
         pickle.dump(tree, f)
+
