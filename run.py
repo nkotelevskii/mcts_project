@@ -2,6 +2,7 @@ import argparse
 import pickle
 
 import numpy as np
+import random
 from tqdm.auto import tqdm
 
 from mcts import simtree, State, Tree, EPGame
@@ -23,6 +24,7 @@ parser.add_argument('--save_name', type=str, default='tree.pkl', help='Name to s
 parser.add_argument('--use_UCT', type=str2bool, default=True, help='Whether to use UCT')
 parser.add_argument('--T_max', type=int, default=100, help='T_max: length of MC path')
 parser.add_argument('--num_epochs', type=int, default=100000, help='num_epochs: number of epochs')
+parser.add_argument('--seed', type=int, default=200, help='Set random seed')
 args = parser.parse_args()
 
 
@@ -47,6 +49,9 @@ def UctSearch(env, T_max, num_epochs, UCT=False):
 
 
 if __name__ == '__main__':
+    
+    np.random.seed(args.seed)
+    random.seed(args.seed)
     print(
         f"Save model as {args.save_name} with T_max={args.T_max} and epochs={args.num_epochs} and UCT={args.use_UCT}")
     T_max = args.T_max
@@ -54,7 +59,7 @@ if __name__ == '__main__':
 
     data = np.load('data_ps3.npz')
     environment = data['environment']
-    env = EPGame(env_map=environment, use_goal=True)
+    env = EPGame(env_map=environment, use_goal=True, seed_num=args.seed)
     tree = UctSearch(env=env, T_max=T_max, num_epochs=num_epochs, UCT=args.use_UCT)
     with open(args.save_name, "wb") as f:
         pickle.dump(tree, f)
