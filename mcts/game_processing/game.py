@@ -13,10 +13,13 @@ def UCT(state, position, tree, c=1):
     parent_id = state.parent_id
     parent_state = tree.states[parent_id]
     n_s = parent_state.n_visits
-    if n_sa != 0:
-        uct = q_sa + sign * np.sqrt(np.log(n_s) / n_sa)
+    if tree.use_uct:
+        if n_sa != 0:
+            uct = q_sa + sign * np.sqrt(np.log(n_s) / n_sa)
+        else:
+            uct = sign * np.inf
     else:
-        uct = sign * np.inf
+        uct = q_sa
     return uct
 
 

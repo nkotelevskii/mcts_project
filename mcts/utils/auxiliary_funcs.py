@@ -26,7 +26,7 @@ class My_policy:
         self.counter = 0
         self.env = env
         self.is_finihed = False
-
+        self.plan_reward = 0.
         self.fit()
 
     def fit(self):
@@ -36,9 +36,11 @@ class My_policy:
             state = sorted([self.tree.states[i] for i in state.children_ids], key=lambda x: x.value)[position]
             if position == -1:
                 position = 0
+                self.plan_reward += self.distance(state.e_state, self.env.goal)
                 self.actions.append(state.action_applied_e)
             else:
                 position = -1
+                self.plan_reward += self.distance(state.e_state, state.p_state)
                 self.actions.append(state.action_applied_p)
 
     @staticmethod

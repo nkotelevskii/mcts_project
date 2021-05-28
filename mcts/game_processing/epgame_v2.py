@@ -43,7 +43,7 @@ def save_results(env, evader_policy, pursuer_policy, max_iters=100, name="policy
 
     ani.save(name + '.mp4')
 
-    plt.show()
+    # plt.show()
 
 
 def default_reward(x_e, x_p, goal):
