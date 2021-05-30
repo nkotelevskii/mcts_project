@@ -28,13 +28,13 @@ MCTS + Tree rebuild
   </tr>
 MCTS 
   <tr>
-    <td><img width="320px" src="./gif/tree__use_UCT_False__seed_203.gif"></td>
-    <td><img width="320px" src="./gif/tree__use_UCT_False__seed_200.gif"></td>
+    <td><img width="480px" src="./gif/tree__use_UCT_False__seed_203.gif"></td>
+    <td><img width="480px" src="./gif/tree__use_UCT_False__seed_200.gif"></td>
   </tr>
 MCTS-UCT
   <tr>
-    <td><img width="320px" src="./gif/tree__use_UCT_True__seed_200.gif"></td>
-    <td><img width="320px" src="./gif/tree__use_UCT_True__seed_201.gif"></td>
+    <td><img width="480px" src="./gif/tree__use_UCT_True__seed_200.gif"></td>
+    <td><img width="480px" src="./gif/tree__use_UCT_True__seed_201.gif"></td>
   </tr>
 
 
