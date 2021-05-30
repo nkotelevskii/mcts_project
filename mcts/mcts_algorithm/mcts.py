@@ -30,10 +30,9 @@ class Tree:
         if self.use_uct:
             heapq.heappush(self.queue, self.states[-1])
 
-    def update_tree(self, node_id, outcome):
+    def update_tree(self, env, node_id, outcome):
+        cum_reward = outcome
         while node_id != -2:
-            self.states[node_id].update_value(outcome=outcome)
+            cum_reward += env.reward(self.states[node_id].e_state, self.states[node_id].p_state, env.goal)
+            self.states[node_id].update_value(outcome=cum_reward)
             node_id = self.states[node_id].parent_id
-        if self.use_uct:
-            self.queue = [self.states[i] for i in range(len(self.states))]
-            heapq.heapify(self.queue)
