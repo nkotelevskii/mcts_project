@@ -1,6 +1,5 @@
 ### Evader-pursuer zero-sum game by MCTS
 
-```
 MCTS policy examples
 
 <table style="width:100%; table-layout:fixed;">
@@ -21,4 +20,3 @@ MCTS policy examples
 
 
 </table>
-```
