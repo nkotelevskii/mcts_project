@@ -65,7 +65,7 @@ class EPGame(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self, env_map, reward=None, use_goal=False, seed_num=781):
+    def __init__(self, env_map, reward=None, use_goal=False, seed_num=200):
         self.done = False
         self.use_goal = use_goal
 
